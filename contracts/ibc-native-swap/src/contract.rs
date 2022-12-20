@@ -6,7 +6,7 @@ use cw20::Denom;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
-use crate::state::{State, Swap, STATE, SWAPS_A, SWAPS_B, SWAP_ID};
+use crate::state::{State, Swap, STATE, SWAPS_A, SWAPS_B, SWAP_ID, LIMIT_ID};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:ibc-native-swap";
@@ -28,6 +28,7 @@ pub fn instantiate(
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
     STATE.save(deps.storage, &state)?;
     SWAP_ID.save(deps.storage, &0u64)?;
+    LIMIT_ID.save(deps.storage, &0u64)?; //set limit_id to 0
 
     Ok(Response::new()
         .add_attribute("method", "instantiate")
@@ -56,7 +57,8 @@ pub fn execute(
         ),
         ExecuteMsg::AcceptSwap { id } => execute::accept(deps, env, info, id),
         ExecuteMsg::CreateSwap { ask, deposit_transfer_channel_id, ask_transfer_channel_id } => execute::create(deps, env, info, ask, deposit_transfer_channel_id, ask_transfer_channel_id),
-        ExecuteMsg::CreateLimit { price_per_token , liquidity_transfer_channel_id, ask_transfer_channel_id } => unimplemented!()
+        ExecuteMsg::CreateLimit { price_per_token , liquidity_transfer_channel_id, ask_transfer_channel_id } => execute::create_limit(deps, env, info, price_per_token, liquidity_transfer_channel_id, ask_transfer_channel_id),
+        ExecuteMsg::AcceptLimit { id } => execute::accept_limit(deps, env, info, id),
     }
 }
 
@@ -64,7 +66,7 @@ pub mod execute {
     use cosmwasm_std::IbcMsg;
     use cw_utils::{must_pay, one_coin};
 
-    use crate::{msg::PacketMsg, state::Token};
+    use crate::{msg::PacketMsg, state::{Token, self, Limit, LIMITS_A}};
 
     use super::*;
 
@@ -167,6 +169,58 @@ pub mod execute {
             //.add_message(transfer_msg)
             .add_message(packet_msg)
             .add_attribute("method", "accept_swap"))
+    }
+
+    pub fn create_limit(
+        deps: DepsMut,
+        env: Env, 
+        info: MessageInfo, 
+        price_per_token: Token,
+        liquidity_transfer_channel_id: String,
+        ask_transfer_channel_id: String
+    )->Result<Response, ContractError>{
+        let state = STATE.load(deps.storage)?;
+        let limit_id = LIMIT_ID.load(deps.storage)?; //loading from LIMIT_ID storige 
+
+        let limit = Limit{
+            price_per_token: price_per_token,
+            liquidity_transfer_channel_id: liquidity_transfer_channel_id,
+            ask_transfer_channel_id: ask_transfer_channel_id,
+
+            liquidty: Token { 
+                denom: Denom::Native(info.funds[0].denom.clone()) ,
+                amount: info.funds[0].amount,
+            },
+            liquidity_address: info.sender.clone(),        //this will be the sender
+        };
+
+        LIMITS_A.save(deps.storage, limit_id, &limit)?;
+
+        LIMIT_ID.save(deps.storage, &(limit_id.checked_add(1).unwrap()));
+
+        let packet = PacketMsg::CreateLimitB { 
+            id: limit_id, 
+            limit: limit.clone() 
+        };
+
+        let msg = IbcMsg::SendPacket { 
+            channel_id: state.endpoint.unwrap().channel_id,
+            data: to_binary(&packet)?, 
+            timeout: env.block.time.plus_seconds(state.packet_lifetime).into(),
+        };
+
+        Ok(Response::new()
+            .add_attribute("method", "create_limit")
+            .add_message(msg))
+    }
+
+    pub fn accept_limit(
+        deps: DepsMut,
+        env: Env,
+        info: MessageInfo,
+        id: u64,
+    ) -> Result<Response, ContractError> {
+        unimplemented!()
     }
 
     

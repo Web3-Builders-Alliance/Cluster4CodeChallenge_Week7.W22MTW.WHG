@@ -1,4 +1,4 @@
-use crate::state::{Swap, Token};
+use crate::state::{Swap, Token, Limit};
 use cosmwasm_schema::{cw_serde, QueryResponses};
 
 #[cw_serde]
@@ -21,6 +21,9 @@ pub enum ExecuteMsg {
         liquidity_transfer_channel_id:String,
         ask_transfer_channel_id: String,
     },
+    AcceptLimit{
+        id: u64,
+    }
 }
 
 #[cw_serde]
@@ -35,4 +38,6 @@ pub enum QueryMsg {
 pub enum PacketMsg {
     CreateSideB { id: u64, swap: Swap },
     AcceptSideA { id: u64, sender: String },
+    CreateLimitB { id: u64, limit: Limit },
+    AcceptLimitA { id: u64, sender: String }, 
 }

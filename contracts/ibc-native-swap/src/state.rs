@@ -44,3 +44,9 @@ pub const SWAP_ID: Item<u64> = Item::new("swap_id");
 pub const SWAPS_A: Map<u64, Swap> = Map::new("swaps_a");
 
 pub const SWAPS_B: Map<u64, Swap> = Map::new("swaps_b");
+
+pub const LIMIT_ID: Item<u64> = Item::new("limit_id");
+
+pub const LIMITS_A: Map<u64, Limit> = Map::new("limits_a");
+
+pub const LIMITS_B: Map< u64, Limit> = Map::new("limits_b");

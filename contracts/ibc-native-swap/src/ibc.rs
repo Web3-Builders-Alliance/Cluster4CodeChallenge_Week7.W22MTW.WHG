@@ -95,6 +95,8 @@ pub fn ibc_packet_receive(
     match packet_msg.unwrap() {
         PacketMsg::CreateSideB { id, swap } => create_side_b(deps, env, id, swap, msg),
         PacketMsg::AcceptSideA { id, sender } => accept_side_a(deps, env, id, sender, msg),
+        PacketMsg::AcceptLimitA { id, sender } => unimplemented!(),
+        PacketMsg::CreateLimitB { id, limit } => unimplemented!(),
     }
 }
 
@@ -180,6 +182,9 @@ pub fn ibc_packet_ack(
         PacketMsg::CreateSideB { id: _, swap: _ } => {
             return Ok(IbcBasicResponse::new().add_attribute("action", "ibc_packet_ack"))
         }
+        PacketMsg::AcceptLimitA { id, sender } => { unimplemented!()}
+        PacketMsg::CreateLimitB { id, limit } => { unimplemented!() }
+        
     }
 }
 
