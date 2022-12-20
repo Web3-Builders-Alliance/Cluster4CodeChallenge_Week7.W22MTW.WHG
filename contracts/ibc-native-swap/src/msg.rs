@@ -16,6 +16,11 @@ pub enum ExecuteMsg {
     AcceptSwap {
         id: u64,
     },
+    CreateLimit{
+        price_per_token: Token,
+        liquidity_transfer_channel_id:String,
+        ask_transfer_channel_id: String,
+    },
 }
 
 #[cw_serde]

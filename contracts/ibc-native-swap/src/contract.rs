@@ -55,6 +55,8 @@ pub fn execute(
             ask_transfer_channel_id,
         ),
         ExecuteMsg::AcceptSwap { id } => execute::accept(deps, env, info, id),
+        ExecuteMsg::CreateSwap { ask, deposit_transfer_channel_id, ask_transfer_channel_id } => execute::create(deps, env, info, ask, deposit_transfer_channel_id, ask_transfer_channel_id),
+        ExecuteMsg::CreateLimit { price_per_token , liquidity_transfer_channel_id, ask_transfer_channel_id } => unimplemented!()
     }
 }
 
@@ -166,6 +168,8 @@ pub mod execute {
             .add_message(packet_msg)
             .add_attribute("method", "accept_swap"))
     }
+
+    
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
